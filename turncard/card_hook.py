@@ -1,6 +1,6 @@
 """Hook 1 of 2 - UserPromptSubmit.
 
-Stamps the STE card on every prompt, and names what the last reply got wrong.
+Adds the rulepack card to every prompt, with the faults found in the last answer.
 Claude Code adds this script's stdout to the model's context for this turn.
 
 This hook never blocks a prompt. If anything fails, it prints nothing and

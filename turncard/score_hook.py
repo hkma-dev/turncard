@@ -1,7 +1,7 @@
 """Hook 2 of 2 - Stop.
 
-Scores the reply that just finished and records what slipped, so hook 1 can
-name it on the next prompt.
+Grades the answer that just finished and records its faults, so hook 1 can put
+them on the next card.
 
 The Stop hook receives the finished reply as `last_assistant_message`, so this
 script never has to parse a transcript file.

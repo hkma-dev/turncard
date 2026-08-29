@@ -45,7 +45,7 @@ People call this context rot. A skill is worse, because you have to invoke it,
 and nobody invokes it on turn forty.
 
 Neither one reads the answer afterwards. Nothing tells you when the model
-slipped, so the rule quietly stops working and the output looks the same as it
+drifted, so the rule quietly stops working and the output looks the same as it
 did when the rule still held.
 
 ## 4. What turncard does
@@ -53,15 +53,15 @@ did when the rule still held.
 turncard checks every answer, with two hooks.
 
 ```
-you ──▶ [card_hook deals the card] ──▶ prompt ──▶ model ──▶ reply ──▶ [score_hook grades it]
-          ▲                                                                  │
-          └──────────── next turn: the card names what slipped ──────────────┘
+you ──▶ [card_hook adds the rules] ──▶ model ──▶ answer ──▶ [score_hook grades it]
+          ▲                                                          │
+          └────────── every fault it finds goes on the next card ────┘
 ```
 
 - **`card_hook.py`** runs when you press Enter. It puts the rules back at the
-  front of the conversation, together with the mistakes from the last answer.
-- **`score_hook.py`** runs when the answer ends. It grades the answer and writes
-  down what slipped.
+  front of the conversation, together with the faults from the last answer.
+- **`score_hook.py`** runs when the answer ends. It grades the answer and
+  records every fault it finds.
 
 The rules never drift away, because turncard sends them again on every prompt.
 Nothing goes unchecked, because the scorer reads every answer. The scorer is a

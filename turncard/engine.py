@@ -5,8 +5,8 @@ it checks the rules a machine can check reliably. The rest of the rules live
 in the rulepack card, which the model reads every turn.
 
 Two hooks use it:
-  card_hook.py   (UserPromptSubmit) - deals the card for this turn
-  score_hook.py  (Stop)             - scores the reply and records what slipped
+  card_hook.py   (UserPromptSubmit) - adds this turn's card to the prompt
+  score_hook.py  (Stop)             - grades the answer and records its faults
 """
 
 import json
