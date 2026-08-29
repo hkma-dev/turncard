@@ -1,0 +1,26 @@
+# Per-session scores. These hold verbatim excerpts of assistant replies, so
+# they stay local. Never force-add them.
+state/
+
+# Word lists built from a standard you obtained yourself. Never redistribute.
+# Matched at any depth, because the extractor accepts a custom output path.
+**/*.banned.json
+
+# Source documents used to build a banned list. Never commit these.
+*.pdf
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor and backup droppings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+.DS_Store
+Thumbs.db

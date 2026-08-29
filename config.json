@@ -1,0 +1,35 @@
+{
+  "_comment": "Turn turncard off with \"enabled\": false. Change \"rulepack\" to point at a different set of rules under rulepacks/.",
+
+  "enabled": true,
+  "rulepack": "rulepacks/ste",
+  "mode": "feedforward",
+
+  "max_sentence_words": 25,
+  "max_paragraph_sentences": 6,
+  "min_words_to_score": 25,
+  "max_slips_on_card": 3,
+  "show_score": "on_slip",
+
+  "pass_score": 90,
+  "weak_score": 70,
+  "strict_block_below": 70,
+
+  "state_retention_days": 7,
+
+  "_banned_note": "A rulepack may ship <rulepack>.banned.json with words to flag and no replacement. The STE rulepack ships none, because ASD forbids redistribution of its dictionary. Build your own with tools/extract_ste_words.py, then set this to true.",
+  "use_banned_list": false,
+
+  "penalties": {
+    "long_sentence": 3,
+    "passive_voice": 4,
+    "progressive_tense": 2,
+    "word_choice": 2,
+    "avoid_word": 1,
+    "banned_word": 1,
+    "semicolon": 2,
+    "long_paragraph": 2
+  },
+
+  "max_penalty_per_rule": 15
+}

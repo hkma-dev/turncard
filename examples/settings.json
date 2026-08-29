@@ -1,0 +1,28 @@
+{
+  "_comment": "Copy these two entries into ~/.claude/settings.json. Replace /path/to/turncard with where you cloned this repository. Keep any hooks you already have.",
+
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"/path/to/turncard/turncard/card_hook.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"/path/to/turncard/turncard/score_hook.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
