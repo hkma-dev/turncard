@@ -104,6 +104,8 @@ Write your own card and keep it short, because card size sets this cost.
 
 ## 6. Install
 
+### Claude Code
+
 Copy this into your agent:
 
 ```
@@ -129,6 +131,28 @@ STE 61/100 (FAIL) - Passive: "is triggered"
 ```
 
 After a clean answer it prints nothing.
+
+### Other agents
+
+The scorer knows nothing about Claude Code. It takes text and hands back a list
+of faults. Only the two hook files speak to one agent, and they run to 75 and
+115 lines. Any agent that can do these two things can run turncard:
+
+- run a program before the model answers, and add its output to the context
+- run a program afterwards, and hand it the answer text
+
+| Agent | Can it run turncard? |
+|-------|----------------------|
+| **Claude Code** | Yes. This is the adapter that ships |
+| **Codex CLI** | Yes, once somebody writes the adapter. Its `Stop` hook carries `last_assistant_message` under that same name |
+| **Gemini CLI** | Yes, once somebody writes the adapter. `BeforeAgent` adds context, `AfterAgent` hands over `prompt_response` |
+| **Cursor** | Half. `afterAgentResponse` grades an answer, and no documented event adds the card to the next prompt |
+| **opencode** | Half. The plugin API covers both halves, and version 2 renames it |
+| **aider** | No. It has no hook system |
+| **Your own loop** | Yes. Call `score_text()` on the answer, then put the card in the next prompt |
+
+Only the Claude Code adapter exists today. The rest are open, and we welcome
+pull requests.
 
 ## 7. Screen it before you install it
 
