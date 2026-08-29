@@ -138,16 +138,8 @@ anything with that reach, from us or from anybody, without looking at it first.
 Step 2 of the install prompt makes your agent read the code and explain it. Ask
 it to audit the repository as well. It costs you one turn.
 
-We ran that audit on ourselves before publishing. It found five faults, and we
-fixed all five:
-
-- Strict mode never ran.
-- One hook returned its answer in a shape Claude Code does not read.
-- A quoted line in your reply could imitate the card and give the model orders.
-- One text-matching pattern took 60 seconds on a hostile input.
-- The README did not say that the optional PDF tool needs a library under the
-  AGPL licence. `tests/verify.py`
-holds 19 checks that keep those faults fixed.
+`tests/verify.py` runs 19 checks. Run it after you install, and again whenever
+you change a rulepack.
 
 ## 8. Feedback
 
