@@ -72,6 +72,10 @@ plain program. It makes no model call and no network call, and it runs in about
 not narrate the card in your reply." That stops the model prefacing every answer
 with "per the card". Ask about the card and the model will tell you.
 
+**Credit.** The two-hook loop follows an idea Kem at GlitchCatclub published on
+their socials. You can find Kem on Instagram at
+[@kem_glitch](https://www.instagram.com/kem_glitch/).
+
 ## 5. What it costs
 
 turncard adds context to every prompt. That is the whole point, and you pay for
