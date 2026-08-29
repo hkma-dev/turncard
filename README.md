@@ -1,6 +1,6 @@
 # turncard
 
-**Your coding agent answers you in plain, checked English. Every turn.**
+**Your coding agent answers you in plain, checked English on every turn.**
 
 ## 1. The problem
 
@@ -16,41 +16,43 @@ not understand.
 
 Aerospace solved this problem forty years ago.
 
-In the late 1970s the Association of European Airlines asked AECMA, the European
-Association of Aerospace Industries, to look at why maintenance manuals were
-hard to read. Engineers around the world work on aircraft in English, and most
-of them do not speak it as a first language. A sentence they read two ways can
-kill people.
+In the late 1970s the European airlines asked the aerospace industry why
+maintenance manuals were so hard to read. Engineers around the world work on
+aircraft in English, and most of them do not speak it as a first language. A
+sentence they read two ways can kill people.
 
-AECMA asked the Aerospace Industries Association of America to help. The two
-groups founded a working group in Amsterdam on 30 June 1983 and published the
-first guide in 1986. It became ASD-STE100 Simplified Technical English in 2005.
-ASD still maintains it, and Issue 9 came out on 15 January 2025.
+The industry answered with a controlled language, and published the first guide
+in 1986. It became ASD-STE100 Simplified Technical English in 2005. ASD still
+maintains it, and Issue 9 came out on 15 January 2025.
 
 The standard does two things. It gives writers about 900 approved words, each
 with one meaning. It adds rules for sentences: keep them short, use the active
 voice, name who does the action, give one instruction at a time.
 
-**The same fix works here.** An engineer reading a manual in a second language
-and you reading agent output have the same need. One meaning per word. Short
-sentences. Say who does what.
+The same fix works here. An engineer reading a manual in a second language and
+you reading agent output have the same need: one meaning per word, short
+sentences, and a named actor for every action.
 
 ## 3. Why a skill or a CLAUDE.md rule does not hold
 
-Other projects put the standard in a `CLAUDE.md` file or in a skill. Both drift.
+Other projects put the standard in a `CLAUDE.md` file or in a skill, and both
+drift.
 
 A rule in `CLAUDE.md` is text near the top of the conversation. As the
 conversation grows, that text moves further away and the model follows it less.
-People call this context rot. A skill is worse, because you have to invoke it,
-and nobody invokes it on turn forty.
+The name for this is context rot.
+
+A skill is worse. A skill is a file of instructions that loads only when
+something calls for it, and nothing calls for it on turn forty.
 
 Neither one reads the answer afterwards. Nothing tells you when the model
-drifted, so the rule quietly stops working and the output looks the same as it
-did when the rule still held.
+drifted, so the rule stops working and the output looks the same as it did when
+the rule still held.
 
 ## 4. What turncard does
 
-turncard checks every answer, with two hooks.
+turncard checks every answer with two hooks. A hook is a small program your
+agent runs by itself at a fixed point in the turn. You never call it.
 
 ```
 you ──▶ [card_hook adds the rules] ──▶ model ──▶ answer ──▶ [score_hook grades it]
@@ -58,22 +60,23 @@ you ──▶ [card_hook adds the rules] ──▶ model ──▶ answer ──
           └────────── every fault it finds goes on the next card ────┘
 ```
 
-- **`card_hook.py`** runs when you press Enter. It puts the rules back at the
-  front of the conversation, together with the faults from the last answer.
+- **`card_hook.py`** runs when you press Enter. It adds the card to your prompt.
+  The card is a short block of text holding your rules, plus the faults from the
+  last answer.
 - **`score_hook.py`** runs when the answer ends. It grades the answer and
   records every fault it finds.
 
-The rules never drift away, because turncard sends them again on every prompt.
-Nothing goes unchecked, because the scorer reads every answer. The scorer is a
-plain program. It makes no model call and no network call, and it runs in about
-3 milliseconds.
+turncard sends the rules again on every prompt, so they never drift away. The
+scorer reads every answer, so nothing goes unchecked. The scorer is a plain
+program. It makes no model call and no network call, and it runs in about 3
+milliseconds.
 
 `card_hook.py` closes the card with one instruction: "Apply this silently. Do
 not narrate the card in your reply." That stops the model prefacing every answer
 with "per the card". Ask about the card and the model will tell you.
 
-**Credit.** The two-hook loop follows an idea Kem at GlitchCatclub published on
-their socials. You can find Kem on Instagram at
+**Credit.** We took the two-hook loop from an idea Kem at GlitchCatclub
+published on their socials. You can find Kem on Instagram at
 [@kem_glitch](https://www.instagram.com/kem_glitch/).
 
 ## 5. What it costs
@@ -81,8 +84,8 @@ their socials. You can find Kem on Instagram at
 turncard adds context to every prompt. That is the whole point, and you pay for
 it.
 
-The card joins the conversation, so every later turn re-reads it. We cut the
-card down to keep that cheap. It is **220 tokens**.
+The card stays in the conversation history, so the model reads it again on every
+later turn. We cut the card down to keep that cheap. It is **220 tokens**.
 
 We measured the result over 52 real sessions on a Claude Max 20x account,
 roughly 3,600 prompts:
@@ -92,10 +95,12 @@ roughly 3,600 prompts:
 | 470 tokens (our first draft) | 6.7% |
 | **220 tokens (what ships)** | **3.2%** |
 
-So turncard costs you about **3% more of your weekly limit**. That figure is an
-upper bound, because auto-compaction drops old cards out of the history.
+So turncard costs you about **3% more of your weekly limit**. The real figure is
+lower. Claude Code throws away the oldest part of a long conversation to make
+room, which takes old cards with it, and our number counts every card as if it
+stayed.
 
-Write your own card and keep it short. Card size is what sets this cost.
+Write your own card and keep it short, because card size sets this cost.
 
 ## 6. Install
 
@@ -134,10 +139,14 @@ Step 2 of the install prompt makes your agent read the code and explain it. Ask
 it to audit the repository as well. It costs you one turn.
 
 We ran that audit on ourselves before publishing. It found five faults, and we
-fixed all five: strict mode never fired, the hook used the wrong output shape, a
-quoted line in your reply could forge the card and inject instructions, one
-regular expression took 60 seconds on a hostile input, and the README did not
-disclose that the optional PDF tool needs an AGPL library. `tests/verify.py`
+fixed all five:
+
+- Strict mode never ran.
+- One hook returned its answer in a shape Claude Code does not read.
+- A quoted line in your reply could imitate the card and give the model orders.
+- One text-matching pattern took 60 seconds on a hostile input.
+- The README did not say that the optional PDF tool needs a library under the
+  AGPL licence. `tests/verify.py`
 holds 19 checks that keep those faults fixed.
 
 ## 8. Feedback
