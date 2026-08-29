@@ -1,0 +1,26 @@
+{
+  "_comment": "UNTESTED. Copy into ~/.codex/hooks.json, or into <repo>/.codex/hooks.json for one project. Codex merges hooks across those layers instead of replacing them. Replace /path/to/turncard with where you cloned this repository.",
+
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"/path/to/turncard/adapters/codex/card_hook.py\"",
+          "timeout": 15
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"/path/to/turncard/adapters/codex/score_hook.py\"",
+          "timeout": 15
+        }
+      ]
+    }
+  ]
+}

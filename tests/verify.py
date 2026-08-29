@@ -15,6 +15,16 @@ import sys
 import time
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
+
+# Session ids this suite creates. Cleanup removes ONLY these files. Never wipe
+# state/ wholesale: it holds the scoreboard of every real session on this
+# machine, and a test run must not cost you your history.
+TEST_SESSIONS = ["STRICT-TEST", "STRICT-NOPID", "ADAPTER-TEST", "A"]
+
+
+def clean_test_state():
+    for name in TEST_SESSIONS:
+        (REPO / "state" / (name + ".json")).unlink(missing_ok=True)
 sys.path.insert(0, str(REPO / "turncard"))
 import engine
 
@@ -90,7 +100,7 @@ edited = json.loads(original)
 edited["mode"] = "strict"
 edited["strict_block_below"] = 90
 config_path.write_text(json.dumps(edited, indent=2), encoding="utf-8")
-hook = str(REPO / "turncard" / "score_hook.py")
+hook = str(REPO / "adapters" / "claude-code" / "score_hook.py")
 try:
     payload = json.dumps({
         "session_id": "STRICT-TEST",
@@ -116,8 +126,47 @@ try:
           '"decision": "block"' in proc.stdout, proc.stdout.strip()[:44])
 finally:
     config_path.write_text(original, encoding="utf-8")
-    import shutil
-    shutil.rmtree(REPO / "state", ignore_errors=True)
+    clean_test_state()
+
+# --- every adapter deals the same card and prints only what its agent parses --
+# Gemini is strict about this: one stray print breaks its JSON parsing.
+ADAPTERS = [
+    ("claude-code/card_hook.py", {"session_id": "A"}, "plain"),
+    ("codex/card_hook.py", {"session_id": "A"}, "UserPromptSubmit"),
+    ("gemini/before_agent.py", {"session_id": "A"}, "BeforeAgent"),
+]
+for rel, payload, shape in ADAPTERS:
+    proc = subprocess.run([sys.executable, str(REPO / "adapters" / rel)],
+                          input=json.dumps(payload), capture_output=True, text=True)
+    out = proc.stdout.strip()
+    if shape == "plain":
+        check("adapter %s deals the card" % rel,
+              out.startswith("<turncard>") and out.endswith("</turncard>"))
+    else:
+        try:
+            got = json.loads(out)
+            card = got["hookSpecificOutput"]["additionalContext"]
+            check("adapter %s wraps the card in JSON" % rel,
+                  got["hookSpecificOutput"]["hookEventName"] == shape
+                  and card.startswith("<turncard>"))
+        except Exception as exc:
+            check("adapter %s wraps the card in JSON" % rel, False, str(exc)[:40])
+
+ANSWER = {"session_id": "ADAPTER-TEST", "last_assistant_message": CORPORATE * 2,
+          "prompt_response": CORPORATE * 2}
+for rel in ["claude-code/score_hook.py", "codex/score_hook.py", "gemini/after_agent.py"]:
+    proc = subprocess.run([sys.executable, str(REPO / "adapters" / rel)],
+                          input=json.dumps(ANSWER), capture_output=True, text=True)
+    out = proc.stdout.strip()
+    ok_json = True
+    if out:
+        try:
+            json.loads(out)
+        except Exception:
+            ok_json = False
+    check("adapter %s prints parseable JSON only" % rel,
+          proc.returncode == 0 and ok_json, out[:44])
+clean_test_state()
 
 # --- .gitignore -------------------------------------------------------------
 # The word list is not redistributable, so it must never be committable.

@@ -422,6 +422,89 @@ def score_text(text, config=None, lexicon=None):
 
 # --- per-session state -----------------------------------------------------
 
+def build_card(session_id, config=None):
+    """The text one adapter puts in front of the model this turn.
+
+    Every adapter calls this, so all of them deal the same card. Only the way
+    the text reaches the model differs between agents.
+    """
+    config = config or load_config()
+    state = read_state(session_id)
+    lines = ["<turncard>", load_card(config), ""]
+
+    last = state.get("last") or {}
+    history = state.get("history") or []
+
+    if not last:
+        lines.append("LAST: no score yet.")
+    else:
+        average = round(sum(history) / len(history)) if history else last.get("score", 0)
+        lines.append("LAST: %s/100 %s. Avg %s over %d."
+                     % (last.get("score", "?"), last.get("grade", "?"),
+                        average, len(history)))
+        slips = last.get("slips") or []
+        if slips:
+            limit = config.get("max_slips_on_card", 3)
+            lines.append("FIX:")
+            for slip in slips[:limit]:
+                lines.append("  - %s" % slip)
+            extra = len(slips) - limit
+            if extra > 0:
+                lines.append("  - +%d more of the same." % extra)
+        else:
+            lines.append("Clean. Hold it.")
+
+    # Narrow instruction: stop the model narrating "per the card..." in every
+    # answer. It must not read as a blanket order to hide turncard from you, so
+    # it says what to skip, not what to conceal. The README documents this line.
+    lines.append("Apply this silently. Do not narrate the card in your reply.")
+    lines.append("</turncard>")
+    return "\n".join(lines)
+
+
+def record_answer(session_id, text, config=None):
+    """Grade one answer and save the faults for the next card.
+
+    Returns the score dict, or None when the answer held too little prose to
+    judge. Every adapter calls this, so all of them grade the same way.
+    """
+    config = config or load_config()
+    result = score_text(text or "", config)
+    state = read_state(session_id)
+    retention = config.get("state_retention_days", 7)
+
+    # A short answer carries too little prose to judge. Keep the previous
+    # feedback rather than wiping it with a meaningless perfect score.
+    if result.get("skipped"):
+        state["turns_skipped"] = state.get("turns_skipped", 0) + 1
+        write_state(session_id, state, retention)
+        return None
+
+    history = state.get("history") or []
+    history.append(result["score"])
+    state["history"] = history[-50:]
+    state["last"] = {
+        "score": result["score"],
+        "grade": result["grade"],
+        "counts": result["counts"],
+        "slips": result["slips"],
+    }
+    write_state(session_id, state, retention)
+    return result
+
+
+def rewrite_request(result, config=None):
+    """The text a strict-mode adapter sends back to ask for one rewrite."""
+    config = config or load_config()
+    return (
+        "That answer scored %d/100 against the card, below the %d needed. "
+        "Rewrite the prose of your last answer to meet the card, and send only "
+        "the rewritten answer. Fix these:\n%s"
+        % (result["score"], config.get("strict_block_below", 70),
+           "\n".join("- %s" % s for s in result["slips"][:8]))
+    )
+
+
 def state_path(session_id):
     safe = re.sub(r"[^A-Za-z0-9_.-]", "_", session_id or "unknown")[:80]
     return STATE_DIR / ("%s.json" % safe)

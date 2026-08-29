@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"/path/to/turncard/turncard/card_hook.py\"",
+            "command": "python \"/path/to/turncard/adapters/claude-code/card_hook.py\"",
             "timeout": 15
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"/path/to/turncard/turncard/score_hook.py\"",
+            "command": "python \"/path/to/turncard/adapters/claude-code/score_hook.py\"",
             "timeout": 15
           }
         ]

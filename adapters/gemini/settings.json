@@ -1,0 +1,30 @@
+{
+  "_comment": "UNTESTED. Copy the hooks block into ~/.gemini/settings.json, not into a project .gemini/settings.json. Gemini treats project hooks as untrusted and warns on first run, and it warns again whenever the command string changes. Replace /path/to/turncard with where you cloned this repository.",
+
+  "hooks": {
+    "BeforeAgent": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"/path/to/turncard/adapters/gemini/before_agent.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"/path/to/turncard/adapters/gemini/after_agent.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -114,7 +114,8 @@ Install turncard from https://github.com/hkma-dev/turncard
 1. Clone it into a folder I will keep, and tell me where you put it.
 2. Read every file first. Tell me in plain words what each one does, and
    what runs on my machine.
-3. Add the two hooks from examples/settings.json to my ~/.claude/settings.json.
+3. Add the two hooks from adapters/claude-code/settings.json to my
+   ~/.claude/settings.json.
    Keep every hook I already have. Show me the change before you write it.
 4. Run tests/verify.py and show me the result.
 5. Tell me how to turn it off again.
@@ -141,18 +142,19 @@ of faults. Only the two hook files speak to one agent, and they run to 75 and
 - run a program before the model answers, and add its output to the context
 - run a program afterwards, and hand it the answer text
 
-| Agent | Can it run turncard? |
-|-------|----------------------|
-| **Claude Code** | Yes. This is the adapter that ships |
-| **Codex CLI** | Yes, once somebody writes the adapter. Its `Stop` hook carries `last_assistant_message` under that same name |
-| **Gemini CLI** | Yes, once somebody writes the adapter. `BeforeAgent` adds context, `AfterAgent` hands over `prompt_response` |
-| **Cursor** | Half. `afterAgentResponse` grades an answer, and no documented event adds the card to the next prompt |
-| **opencode** | Half. The plugin API covers both halves, and version 2 renames it |
-| **aider** | No. It has no hook system |
-| **Your own loop** | Yes. Call `score_text()` on the answer, then put the card in the next prompt |
+| Agent | Adapter | State |
+|-------|---------|-------|
+| **Claude Code** | `adapters/claude-code/` | Tested. This is the one we run |
+| **Codex CLI** | `adapters/codex/` | Written, **untested**. Its `Stop` hook carries `last_assistant_message` under that same name |
+| **Gemini CLI** | `adapters/gemini/` | Written, **untested**. `BeforeAgent` adds context, `AfterAgent` hands over `prompt_response` |
+| **Cursor** | none | Half possible. `afterAgentResponse` grades an answer, and no documented event adds the card to the next prompt |
+| **opencode** | none | Half possible. The plugin API covers both halves, and version 2 renames it |
+| **aider** | none | No hook system |
+| **Your own loop** | none needed | Call `engine.build_card()` before the model and `engine.record_answer()` after |
 
-Only the Claude Code adapter exists today. The rest are open, and we welcome
-pull requests.
+Each adapter folder holds its own config example. We wrote the Codex and Gemini
+adapters against each product's published hook schemas, and we have not run
+either one. Tell us what breaks.
 
 ## 7. Screen it before you install it
 
